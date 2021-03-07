@@ -155,7 +155,7 @@ public class FPSContraler : MonoBehaviour
         isReloading = true;
 
 
-        // 開槍動畫
+        // 換彈夾動畫
         ani.SetTrigger("doReload");
 
         // 換彈夾聲響
