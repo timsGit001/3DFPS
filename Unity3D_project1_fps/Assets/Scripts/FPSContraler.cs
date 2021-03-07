@@ -5,6 +5,8 @@ using System.Collections;
 public class FPSContraler : MonoBehaviour
 {
     #region 基本欄位
+    [Header("血量"), Range(0, 100)]
+    public float hp = 100f;
     [Header("移動速度"), Range(0, 200)]
     public float speed;
     [Header("轉動速度"), Range(0, 1000)]
@@ -38,6 +40,8 @@ public class FPSContraler : MonoBehaviour
     public Text textBulletCurrent;
     [Header("UI文字: 子彈總數")]
     public Text textBulletTotal;
+    [Header("子彈攻擊力"), Range(0, 100)]
+    public float pwr = 30;
     [Header("換彈夾花費時間(秒)")]
     public float reloadTime = 1.0f;
     [Header("開槍間隔時間(秒)")]
@@ -125,6 +129,7 @@ public class FPSContraler : MonoBehaviour
 
             // 生成子彈
             GameObject tempBullet = Instantiate<GameObject>(bullet, bulletSpawn.position, bulletSpawn.rotation);
+            tempBullet.GetComponent<Bullets>().pwr = pwr;
 
             // 子彈飛出
             tempBullet.GetComponent<Rigidbody>().AddForce(bulletSpawn.up * bulletSpeed);
@@ -134,7 +139,7 @@ public class FPSContraler : MonoBehaviour
         }
         else
         {
-            timer += 1*Time.deltaTime;
+            timer += 1 * Time.deltaTime;
         }
     }
 
@@ -180,6 +185,33 @@ public class FPSContraler : MonoBehaviour
         textBulletTotal.text = bulletTotal.ToString();
 
         isReloading = false;
+    }
+
+
+    private void Damage(float dmg)
+    {
+        hp -= dmg;
+        if (hp <= 0) {
+            Death();
+        }
+        
+    }
+
+    private void Death()
+    {
+        ani.SetBool("dieSwitch", true);
+        rig.Sleep();
+        rig.constraints = RigidbodyConstraints.FreezeAll;
+        GetComponent<CapsuleCollider>().enabled = false;
+        enabled = false;
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        GameObject obj = collision.gameObject;
+        if (obj.tag == "Bullets")
+        {
+            Damage(obj.GetComponent<Bullets>().pwr);
+        }
     }
 
     private void Update()
