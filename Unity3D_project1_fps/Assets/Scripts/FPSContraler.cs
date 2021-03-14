@@ -7,20 +7,27 @@ public class FPSContraler : MonoBehaviour
     #region 基本欄位
     [Header("血量"), Range(0, 100)]
     public float hp = 100f;
-    [Header("移動速度"), Range(0, 200)]
+    private float hpMax;
+    [Header("移動速度"), Range(0, 20000)]
     public float speed;
     [Header("轉動速度"), Range(0, 1000)]
     public float turnSpeed;
-    [Header("跳躍力道"), Range(0, 1000)]
+    [Header("跳躍力道"), Range(0, 10000)]
     public float jumpForce;
     [Header("地板偵測")]
     public Vector3 floorOffset;
     [Header("地板偵測半徑"), Range(0, 10)]
     public float floorRadius = 1;
+    [Header("UI圖示: Hp")]
+    public Image hpImg;
+    [Header("UI文字: Hp數值")]
+    public Text hpText;
 
     private Animator ani;
     private Rigidbody rig;
     private AudioSource aud;
+    private Transform camMain;
+    private Transform camSelf;
     #endregion
 
     #region 開槍欄位
@@ -66,6 +73,12 @@ public class FPSContraler : MonoBehaviour
 
         textBulletCurrent.text = bulletCurrent.ToString();
         textBulletTotal.text = bulletTotal.ToString();
+
+        hpText.text = hp.ToString();
+        hpMax = hp;
+
+        camMain = transform.Find("Main Camera");
+        camSelf = transform.Find("Self Camera");
     }
 
     private void OnDrawGizmos()
@@ -191,10 +204,21 @@ public class FPSContraler : MonoBehaviour
     private void Damage(float dmg)
     {
         hp -= dmg;
-        if (hp <= 0) {
+        if (hp <= 0)
+        {
+            hp = 0;
             Death();
         }
-        
+
+        // 設定UI
+        hpText.text = hp.ToString();
+        float amount = hp / hpMax;
+        hpImg.fillAmount = amount;
+        if (amount < 0.5f)
+        {
+            hpText.color = Color.red;
+            hpImg.color = Color.red;
+        }
     }
 
     private void Death()
@@ -204,6 +228,8 @@ public class FPSContraler : MonoBehaviour
         rig.constraints = RigidbodyConstraints.FreezeAll;
         GetComponent<CapsuleCollider>().enabled = false;
         enabled = false;
+
+        StartCoroutine(MoveCamFinal());
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -212,6 +238,36 @@ public class FPSContraler : MonoBehaviour
         {
             Damage(obj.GetComponent<Bullets>().pwr);
         }
+    }
+
+
+    private IEnumerator MoveCamFinal()
+    {
+        // 攝影機 往玩家看
+        camMain.LookAt(transform);
+        camSelf.LookAt(transform);
+
+        // 取得攝影機座標
+        Vector3 camPos = camMain.position;
+        // 取得攝影機的y
+        float camPosY = camPos.y;
+        float camNewPosY = camPos.y + 2;
+        Vector3 finPos = new Vector3(camPos.x, camPos.y + 2, camPos.z);
+        Vector3 newPos = Vector3.Lerp(camPos, finPos, 0.001f);
+
+        print((finPos - newPos).magnitude);
+        while ((finPos- newPos).magnitude > 0.05)
+        {
+            camMain.position = newPos;
+            camSelf.position = newPos;
+
+            yield return new WaitForSeconds(0.05f);
+            newPos = Vector3.Lerp(camMain.position, finPos, 0.3f);
+            print((finPos - newPos).magnitude);
+        }
+
+        camMain.position = finPos;
+        camSelf.position = finPos;
     }
 
     private void Update()
