@@ -28,6 +28,7 @@ public class FPSContraler : MonoBehaviour
     private AudioSource aud;
     private Transform camMain;
     private Transform camSelf;
+    private Transform crosshair;
     #endregion
 
     #region 開槍欄位
@@ -53,6 +54,10 @@ public class FPSContraler : MonoBehaviour
     public float reloadTime = 1.0f;
     [Header("開槍間隔時間(秒)")]
     public float fireIntervalTime = 0.1f;
+    [Header("準心上下移動的速度"), Range(0, 10)]
+    public float crosshairSpeed = 0.2f;
+    [Header("準心上下移動的範圍")]
+    public Vector2 crosshairMoveLimit = new Vector2(2f, 3.3f);
     [Header("音效: 開槍")]
     public AudioClip fireFsx;
     [Header("音效: 換彈夾")]
@@ -77,8 +82,9 @@ public class FPSContraler : MonoBehaviour
         hpText.text = hp.ToString();
         hpMax = hp;
 
-        camMain = transform.Find("Main Camera");
-        camSelf = transform.Find("Self Camera");
+        camMain = transform.Find("Cameras").Find("Main Camera");
+        camSelf = transform.Find("Cameras").Find("Self Camera");
+        crosshair = transform.Find("Crosshair");
     }
 
     private void OnDrawGizmos()
@@ -107,6 +113,13 @@ public class FPSContraler : MonoBehaviour
         // 取左右的值
         float x = Input.GetAxis("Mouse X");
         transform.Rotate(0, x * turnSpeed * Time.deltaTime, 0);
+
+        // 取得 上下值
+        float y = Input.GetAxis("Mouse Y");
+        Vector3 crossPos = crosshair.localPosition;
+        crossPos.y += y * Time.deltaTime * crosshairSpeed;
+        crossPos.y = Mathf.Clamp(crossPos.y, crosshairMoveLimit.x, crosshairMoveLimit.y);
+        crosshair.localPosition = crossPos;
 
     }
 
@@ -256,7 +269,7 @@ public class FPSContraler : MonoBehaviour
         Vector3 newPos = Vector3.Lerp(camPos, finPos, 0.001f);
 
         print((finPos - newPos).magnitude);
-        while ((finPos- newPos).magnitude > 0.05)
+        while ((finPos - newPos).magnitude > 0.05)
         {
             camMain.position = newPos;
             camSelf.position = newPos;

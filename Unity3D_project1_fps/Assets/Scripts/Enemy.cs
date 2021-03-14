@@ -168,7 +168,16 @@ public class Enemy : MonoBehaviour
         GameObject obj = collision.gameObject;
         if (obj.tag == "Bullets")
         {
-            Damage(obj.GetComponent<Bullets>().pwr);
+            print(collision.contacts[0].thisCollider.GetType());
+            if (collision.contacts[0].thisCollider.GetType().Equals(typeof(SphereCollider)))
+            {
+                // 暴頭
+                Damage(100.0f);
+            }
+            else
+            {
+                Damage(obj.GetComponent<Bullets>().pwr);
+            }
         }
     }
 }
