@@ -41,6 +41,7 @@ public class Enemy : MonoBehaviour
     private bool isReloading;
     private float hp = 100f;
 
+    private GameManager gm;
     // Start is called before the first frame update
     void Awake()
     {
@@ -51,6 +52,7 @@ public class Enemy : MonoBehaviour
         nav.stoppingDistance = atkRange;
 
         ani = GetComponent<Animator>();
+        gm = FindObjectOfType<GameManager>();
     }
 
     // Update is called once per frame
@@ -91,6 +93,7 @@ public class Enemy : MonoBehaviour
                 // 生成子彈
                 GameObject tempBullet = Instantiate<GameObject>(bullet, bulletSpawn.position, bulletSpawn.rotation);
                 tempBullet.GetComponent<Bullets>().pwr = pwr;
+                tempBullet.name += name;
 
                 // 子彈飛出
                 tempBullet.GetComponent<Rigidbody>().AddForce(bulletSpawn.up * bulletSpeed);
@@ -161,6 +164,22 @@ public class Enemy : MonoBehaviour
         GetComponent<CapsuleCollider>().enabled = false;
         GetComponent<SphereCollider>().enabled = false;
         enabled = false;
+
+        gm.UpdateDataKill(ref gm.killPlayer, gm.textDataPlayer, "玩家:", gm.deadPlayer);
+
+        switch (name) {
+            case "Enemy1":
+                gm.UpdateDataDead( gm.killNpc1, gm.textDataNpc1, "電腦1:", ref gm.deadNpc1);
+                break;
+            case "Enemy2":
+                gm.UpdateDataDead(gm.killNpc2, gm.textDataNpc2, "電腦2:", ref gm.deadNpc2);
+                break;
+            case "Enemy3":
+                gm.UpdateDataDead(gm.killNpc3, gm.textDataNpc3, "電腦3:", ref gm.deadNpc3);
+                break;
+            default:
+                break;
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -168,7 +187,6 @@ public class Enemy : MonoBehaviour
         GameObject obj = collision.gameObject;
         if (obj.tag == "Bullets")
         {
-            print(collision.contacts[0].thisCollider.GetType());
             if (collision.contacts[0].thisCollider.GetType().Equals(typeof(SphereCollider)))
             {
                 // 暴頭

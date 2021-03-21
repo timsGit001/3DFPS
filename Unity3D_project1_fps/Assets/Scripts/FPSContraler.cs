@@ -67,6 +67,7 @@ public class FPSContraler : MonoBehaviour
     private bool isReloading = false;
     #endregion
 
+    private GameManager gm;
     private void Awake()
     {
         ani = GetComponent<Animator>();
@@ -85,6 +86,8 @@ public class FPSContraler : MonoBehaviour
         camMain = transform.Find("Cameras").Find("Main Camera");
         camSelf = transform.Find("Cameras").Find("Self Camera");
         crosshair = transform.Find("Crosshair");
+
+        gm = FindObjectOfType<GameManager>();
     }
 
     private void OnDrawGizmos()
@@ -214,13 +217,13 @@ public class FPSContraler : MonoBehaviour
     }
 
 
-    private void Damage(float dmg)
+    private void Damage(float dmg, string bName)
     {
         hp -= dmg;
         if (hp <= 0)
         {
             hp = 0;
-            Death();
+            Death(bName);
         }
 
         // 設定UI
@@ -234,7 +237,7 @@ public class FPSContraler : MonoBehaviour
         }
     }
 
-    private void Death()
+    private void Death(string bName)
     {
         ani.SetBool("dieSwitch", true);
         rig.Sleep();
@@ -242,6 +245,20 @@ public class FPSContraler : MonoBehaviour
         GetComponent<CapsuleCollider>().enabled = false;
         enabled = false;
 
+        gm.UpdateDataDead(gm.killPlayer, gm.textDataPlayer, "玩家:", ref gm.deadPlayer);
+
+        if (bName.Contains("Enemy1"))
+        {
+            gm.UpdateDataKill(ref gm.killNpc1, gm.textDataNpc1, "電腦1:", gm.deadNpc1);
+        }
+        else if (bName.Contains("Enemy2"))
+        {
+            gm.UpdateDataKill(ref gm.killNpc2, gm.textDataNpc2, "電腦2:", gm.deadNpc2);
+        }
+        else if (bName.Contains("Enemy3"))
+        {
+            gm.UpdateDataKill(ref gm.killNpc3, gm.textDataNpc3, "電腦3:", gm.deadNpc3);
+        }
         StartCoroutine(MoveCamFinal());
     }
     private void OnCollisionEnter(Collision collision)
@@ -249,7 +266,8 @@ public class FPSContraler : MonoBehaviour
         GameObject obj = collision.gameObject;
         if (obj.tag == "Bullets")
         {
-            Damage(obj.GetComponent<Bullets>().pwr);
+            Bullets bullete = obj.GetComponent<Bullets>();
+            Damage(bullete.pwr, obj.name);
         }
     }
 
